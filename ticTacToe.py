@@ -5,6 +5,10 @@ import numpy as np
 import pickle
 
 
+BOARD_ROWS = 3
+BOARD_COLS = 3
+
+
 class State:
     def __init__(self, p1, p2):
         self.p1 = p1
@@ -235,7 +239,7 @@ class Player:
         self.states = []
 
     def savePolicy(self, name):
-        fw = open('policy_{}'.format(name), 'wb')
+        fw = open('{}'.format(name), 'wb')
         pickle.dump(self.states_value, fw)
         fw.close()
 
@@ -269,27 +273,37 @@ class HumanPlayer:
         pass
 
 
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Tic Tac Toe')
-    parser.add_argument('-f', required=True, help='file with policy')
-    args = parser.parse_args()
+def training(args):
     # training
-    #p1 = Player("p1")
-    #p2 = Player("p2")
+    p1 = Player("p1")
+    p2 = Player("p2")
 
-    #st = State(p1, p2)
-    #print("training...")
-    #st.play(500000)
+    st = State(p1, p2)
+    st.play(args.n)
+    p1.savePolicy(args.o)
 
-    #p1.savePolicy('500000')
 
+def play(args):
     # play with human
     p1 = Player('computer', exp_rate=0)
-    p1.loadPolicy(args.f)
+    p1.loadPolicy(args.l)
 
     p2 = HumanPlayer('human')
 
     st = State(p1, p2)
     st.play2()
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Tic Tac Toe')
+    parser.add_argument('-l', type=str, help='file with policy')
+    parser.add_argument('-o', type=str, help='output file with policy')
+    parser.add_argument('-n', type=int, help='number of games to train')
+    args = parser.parse_args()
+    
+    if args.l is not None:
+        play(args)
+    else:
+        training(args)
