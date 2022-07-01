@@ -49,7 +49,7 @@ function handleResultValidation() {
 
     if (roundWon) {
         statusDisplay.innerHTML = winningMessage();
-        gameActive = false;
+        gameActive = false; 
         return;
     }
 
@@ -73,8 +73,30 @@ function httpGet(theUrl) {
 function handleBotPlay(index) {
     row =  Math.trunc(index / 3);
     col = index % 3;
+
+    // code the board into a an array
+    board = []
+    for(let i = 0; i < 9; i++) {
+        if(gameState[i] == "X") {
+            board.push(1);
+        } else if(gameState[i] == "O") {
+            board.push(-1);
+        } else {
+            board.push(0);
+        }
+    }
+
+    console.log('Board = '+board);
+    url_parameters=''
+    for (const b of board) {
+        url_parameters += 'board='+b+'&'
+    }
+    url_parameters += 'player=-1'
+    
+    console.log('url parameters = '+url_parameters)
+
     console.log(row+' '+col);
-    response = JSON.parse(httpGet('play?row='+row+'&col='+col));
+    response = JSON.parse(httpGet('play?'+url_parameters)); //board='+row+'&col='+col));
     console.log(response);
     
     clickedCellIndex = index =  response['row'] * 3 + response['col'];
@@ -87,9 +109,6 @@ function handleBotPlay(index) {
 function handleCellClick(clickedCellEvent) {
     const clickedCell = clickedCellEvent.target;
     const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
-
-    //convert
-    console.log(clickedCellIndex)
 
     if (gameState[clickedCellIndex] !== "" || !gameActive) {
         return;

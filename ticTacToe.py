@@ -201,6 +201,16 @@ class State:
         print('-------------')
 
 
+def availablePositions(board):
+        positions = []
+        rows, cols = board.shape
+        for i in range(rows):
+            for j in range(cols):
+                if board[i, j] == 0:
+                    positions.append((i, j))
+        return positions
+
+
 class Player:
     def __init__(self, name, exp_rate=0.3):
         self.name = name
@@ -211,10 +221,14 @@ class Player:
         self.states_value = {}  # state -> value
 
     def getHash(self, board):
-        boardHash = str(board.reshape(BOARD_COLS * BOARD_ROWS))
+        rows, cols = board.shape
+        boardHash = str(board.reshape(rows * cols))
         return boardHash
 
-    def chooseAction(self, positions, current_board, symbol):
+    def chooseAction(self, current_board, symbol):
+        
+        positions = availablePositions(current_board)
+
         if np.random.uniform(0, 1) <= self.exp_rate:
             # take random action
             idx = np.random.choice(len(positions))
@@ -225,6 +239,7 @@ class Player:
                 next_board = current_board.copy()
                 next_board[p] = symbol
                 next_boardHash = self.getHash(next_board)
+                print(f'board hash {next_boardHash}')
                 value = 0 if self.states_value.get(next_boardHash) is None else self.states_value.get(next_boardHash)
                 # print("value", value)
                 if value >= value_max:
