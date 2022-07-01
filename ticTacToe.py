@@ -10,7 +10,7 @@ BOARD_COLS = 3
 
 
 class State:
-    def __init__(self, p1, p2):
+    def __init__(self, p1, p2=None):
         self.p1 = p1
         self.p2 = p2
         self.isEnd = False
@@ -72,6 +72,7 @@ class State:
         return positions
 
     def updateState(self, position):
+        print(f'updateState {position}')
         self.board[position] = self.playerSymbol
         # switch to another player
         self.playerSymbol = -1 if self.playerSymbol == 1 else 1
@@ -173,6 +174,15 @@ class State:
                         print("tie!")
                     self.reset()
                     break
+
+    def play_it(self, row, col):
+        print(f'Play IT {row} {col}')
+        human_action = (row, col)
+        self.updateState(human_action)
+        positions = self.availablePositions()
+        bot_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+        self.updateState(bot_action)
+        return bot_action
 
     def showBoard(self):
         # p1: x  p2: o
