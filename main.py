@@ -8,7 +8,7 @@ from ticTacToe import Player
 APP = Flask(__name__)
 
 player = Player('computer', exp_rate=0)
-player.loadPolicy('policies/50000.pickle')
+player.loadPolicy('policies/10000.pickle')
 
 
 @APP.route('/')
@@ -21,7 +21,7 @@ def play():
     #row = int(request.args.get('row'))
     #column = int(request.args.get('col'))
     board = request.args.getlist('board')
-    board = [int(x) for x in board]
+    board = [float(x) for x in board]
     board = np.array(board)
     board = board.reshape(3, 3)
     ps = int(request.args.get('player'))

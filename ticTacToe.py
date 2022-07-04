@@ -72,7 +72,7 @@ class State:
         return positions
 
     def updateState(self, position):
-        print(f'updateState {position}')
+        #print(f'updateState {position}')
         self.board[position] = self.playerSymbol
         # switch to another player
         self.playerSymbol = -1 if self.playerSymbol == 1 else 1
@@ -99,13 +99,11 @@ class State:
         self.playerSymbol = 1
 
     def play(self, rounds=100):
-        for i in range(rounds):
-            if i % 1000 == 0:
-                print("Rounds {}".format(i))
+        for i in tqdm(range(rounds)):
             while not self.isEnd:
                 # Player 1
-                positions = self.availablePositions()
-                p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+                #positions = self.availablePositions()
+                p1_action = self.p1.chooseAction(self.board, self.playerSymbol)
                 # take action and upate board state
                 self.updateState(p1_action)
                 board_hash = self.getHash()
@@ -124,8 +122,8 @@ class State:
 
                 else:
                     # Player 2
-                    positions = self.availablePositions()
-                    p2_action = self.p2.chooseAction(positions, self.board, self.playerSymbol)
+                    #positions = self.availablePositions()
+                    p2_action = self.p2.chooseAction(self.board, self.playerSymbol)
                     self.updateState(p2_action)
                     board_hash = self.getHash()
                     self.p2.addState(board_hash)
@@ -176,7 +174,7 @@ class State:
                     break
 
     def play_it(self, row, col):
-        print(f'Play IT {row} {col}')
+        #print(f'Play IT {row} {col}')
         human_action = (row, col)
         self.updateState(human_action)
         positions = self.availablePositions()
@@ -212,13 +210,13 @@ def availablePositions(board):
 
 
 class Player:
-    def __init__(self, name, exp_rate=0.3):
+    def __init__(self, name, states_value={}, exp_rate=0.3):
         self.name = name
         self.states = []  # record all positions taken
         self.lr = 0.2
         self.exp_rate = exp_rate
         self.decay_gamma = 0.9
-        self.states_value = {}  # state -> value
+        self.states_value = states_value  # state -> value
 
     def getHash(self, board):
         rows, cols = board.shape
@@ -226,9 +224,7 @@ class Player:
         return boardHash
 
     def chooseAction(self, current_board, symbol):
-        
         positions = availablePositions(current_board)
-
         if np.random.uniform(0, 1) <= self.exp_rate:
             # take random action
             idx = np.random.choice(len(positions))
@@ -239,13 +235,13 @@ class Player:
                 next_board = current_board.copy()
                 next_board[p] = symbol
                 next_boardHash = self.getHash(next_board)
-                print(f'board hash {next_boardHash}')
+                #print(f'board hash {next_boardHash}')
                 value = 0 if self.states_value.get(next_boardHash) is None else self.states_value.get(next_boardHash)
-                # print("value", value)
+                #print("value", value)
                 if value >= value_max:
                     value_max = value
                     action = p
-        # print("{} takes action {}".format(self.name, action))
+        #print("{} takes action {}".format(self.name, action))
         return action
 
     # append a hash state
@@ -272,6 +268,7 @@ class Player:
         fr = open(file, 'rb')
         self.states_value = pickle.load(fr)
         fr.close()
+        #print(f'{self.states_value}')
 
 
 class HumanPlayer:
@@ -299,36 +296,25 @@ class HumanPlayer:
 
 
 def training(args):
+    # shared policies
+    states_value = {}
+    
     # training
-    p1 = Player("p1")
-    p2 = Player("p2")
+    p1 = Player("p1", states_value=states_value)
+    p2 = Player("p2", states_value=states_value)
 
     st = State(p1, p2)
     st.play(args.n)
+    
+    # since policies are shared
     p1.savePolicy(args.o)
-
-
-def play(args):
-    # play with human
-    p1 = Player('computer', exp_rate=0)
-    p1.loadPolicy(args.l)
-
-    p2 = HumanPlayer('human')
-
-    st = State(p1, p2)
-    st.play2()
 
 
 if __name__ == "__main__":
     import argparse
-
+    from tqdm import tqdm
     parser = argparse.ArgumentParser(description='Tic Tac Toe')
-    parser.add_argument('-l', type=str, help='file with policy')
     parser.add_argument('-o', type=str, help='output file with policy')
     parser.add_argument('-n', type=int, help='number of games to train')
     args = parser.parse_args()
-    
-    if args.l is not None:
-        play(args)
-    else:
-        training(args)
+    training(args)
