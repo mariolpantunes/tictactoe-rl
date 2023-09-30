@@ -98,7 +98,8 @@ class TicTacToe:
         for i in range(rounds):
             while not self.isEnd:
                 # Player 1
-                p1_action = self.p1.chooseAction(self.get_state(), self.playerSymbol)
+                r, c, _ = self.p1.chooseAction(self.get_state(), self.playerSymbol)
+                p1_action = (r, c)
                 self.play_action(p1_action)
 
                 win = self.winner()
@@ -114,7 +115,8 @@ class TicTacToe:
 
                 else:
                     # Player 2
-                    p2_action = self.p2.chooseAction(self.get_state(), self.playerSymbol)
+                    r, c, _ = self.p2.chooseAction(self.get_state(), self.playerSymbol)
+                    p2_action = (r, c)
                     self.play_action(p2_action)
                     
                     win = self.winner()

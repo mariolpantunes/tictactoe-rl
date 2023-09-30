@@ -9,6 +9,7 @@ __status__ = 'Development'
 
 import json
 import math
+import random
 import logging
 import argparse
 import numpy as np
@@ -23,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 NN_ARCHITECTURE = [
-    {'input_dim': 9, 'output_dim': 6, 'activation': 'relu'},
-    {'input_dim': 6, 'output_dim': 9, 'activation': 'sigmoid'}
+    {'input_dim': 9, 'output_dim': 3, 'activation': 'sigmoid'},
+    {'input_dim': 3, 'output_dim': 9, 'activation': 'sigmoid'}
 ]
 
 
@@ -55,20 +56,22 @@ class NNAgent:
             #logger.info(f'Symbol {symbol} -> {current_state} -> {fixed_current_state}')
             actions, activations = self.model.predict_activations(fixed_current_state)
         
-        idx = np.argmax(actions)
-        row = int(idx / self.cols)
-        col = idx % self.cols
-        position = (row, col)
+        # Filter valiad actions
+        mask = list(range(9))
+        #logger.info(f'{actions} {mask}')
+        positions = [(int(idx / self.cols), idx % self.cols) for idx in mask]
+        positions = [p for p in positions if p in available_positions]
+        mask = [(row * self.cols) + col for row, col in positions]
+        
+        weights = actions[mask]
 
-        #logger.info(f'NN Actions {actions} -> IDX {idx} -> POS {position}')
+        #logger.info(f'{actions} {positions} {mask} {weights}')
 
-        while position not in available_positions:
-            actions[idx] = -1.0
-            idx = np.argmax(actions)
-            row = int(idx / self.cols)
-            col = idx % self.cols
-            position = (row, col)
-        return position
+        r,c = random.choices(positions, weights=weights, k=1)[0]
+        
+        nn = {'activations': activations, 'networkLayer': self.model.layers()}
+        
+        return r, c, nn
 
 
 def objective(p: np.ndarray) -> float:
@@ -93,13 +96,13 @@ def objective(p: np.ndarray) -> float:
         adversary_agent = NNAgent(adversary_model)
         
         game = tictactoe.TicTacToe(current_agent, adversary_agent)
-        win_p1, draws, win_p2 = game.play(100)
+        win_p1, draws, win_p2 = game.play(10)
         
         reward += (1.0 * win_p1 + 0.25 * draws + -3.0 * win_p2)
         #logger.info(f'Agent 1 {win_p1}, {draws}, {win_p2} -> {reward}')
 
         game = tictactoe.TicTacToe(adversary_agent, current_agent)
-        win_p1, draws, win_p2 = game.play(100)
+        win_p1, draws, win_p2 = game.play(10)
         reward += (-3.0 * win_p1 + 0.25 * draws + 1.5 * win_p2)
         #logger.info(f'Agent 2 {win_p1}, {draws}, {win_p2} -> {reward}')
     
@@ -136,7 +139,7 @@ def main(args: argparse.Namespace) -> None:
     bounds = np.asarray([[-5.0, 5.0]]*nn.network_size(NN_ARCHITECTURE))
 
     # Generate the initial population
-    population = [nn.NN(NN_ARCHITECTURE, seed=args.s).ravel() for i in range(args.n)]
+    population = [nn.NN(NN_ARCHITECTURE, seed=args.s).ravel() for _ in range(args.n)]
 
     # Store population in the global variable
     global POPULATION
@@ -162,7 +165,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train the agents', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-s', type=int, help='Random generator seed', default=42)
-    parser.add_argument('-e', type=int, help='optimization epochs', default=100)
+    parser.add_argument('-e', type=int, help='optimization epochs', default=2000)
     parser.add_argument('-n', type=int, help='population size', default=20)
     parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp.json')
     args = parser.parse_args()
