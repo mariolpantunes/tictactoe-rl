@@ -2,7 +2,7 @@
 
 import numpy as np
 from flask import Flask, request, jsonify, render_template
-from ticTacToe import Player
+from src.ticTacToe_old import Player
 
 # Create the application.
 APP = Flask(__name__)
