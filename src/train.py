@@ -55,10 +55,13 @@ class NNAgent:
             #logger.info(f'Symbol {symbol} -> {current_state} -> {fixed_current_state}')
             actions, activations = self.model.predict_activations(fixed_current_state)
         
+        nn = {'activations': activations, 'networkLayer': self.model.layers()}
+
         idx = np.argmax(actions)
         row = int(idx / self.cols)
         col = idx % self.cols
         position = (row, col)
+        rv = (row, col, nn)
 
         #logger.info(f'NN Actions {actions} -> IDX {idx} -> POS {position}')
 
@@ -67,8 +70,9 @@ class NNAgent:
             idx = np.argmax(actions)
             row = int(idx / self.cols)
             col = idx % self.cols
+            rv = (row, col, nn)
             position = (row, col)
-        return position
+        return rv
 
 
 def objective(p: np.ndarray) -> float:

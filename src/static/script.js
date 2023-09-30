@@ -106,6 +106,13 @@ function requestBotPlay(index) {
         //console.log(row+' '+col);
         let response = JSON.parse(httpGet('play?'+url_parameters)); //board='+row+'&col='+col));
         //console.log(response);
+
+        // OPTIONAL -- get the neural network
+        if (response.hasOwnProperty('neural_network') && document.getElementById('canvas_network')) {
+            requestAnimationFrame(function() {
+                draw_network(response['neural_network'].networkLayer, response['neural_network'].activations);
+            });
+        }
         
         let clickedCellIndex = response['row'] * 3 + response['col'];
         //console.log(clickedCellIndex);
