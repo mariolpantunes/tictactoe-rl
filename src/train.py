@@ -95,14 +95,15 @@ def objective(p: np.ndarray) -> float:
         game = tictactoe.TicTacToe(current_agent, adversary_agent)
         win_p1, draws, win_p2 = game.play(100)
         
-        reward += (1.0 * win_p1 + 0.5 * draws + -3.0 * win_p2)
+        reward += (1.0 * win_p1 + 0.25 * draws + -3.0 * win_p2)
         #logger.info(f'Agent 1 {win_p1}, {draws}, {win_p2} -> {reward}')
 
         game = tictactoe.TicTacToe(adversary_agent, current_agent)
         win_p1, draws, win_p2 = game.play(100)
-        reward += (-1.0 * win_p1 + 0.5 * draws + 1.0 * win_p2)
+        reward += (-3.0 * win_p1 + 0.25 * draws + 1.5 * win_p2)
         #logger.info(f'Agent 2 {win_p1}, {draws}, {win_p2} -> {reward}')
-    return -math.log(reward) if reward > 0 else math.log(abs(reward)+1E-5)
+    
+    return -reward
 
 
 def store_data(model:dict, parameters:np.ndarray, path:str) -> None:
