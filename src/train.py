@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 NN_ARCHITECTURE = [
-    {'input_dim': 9, 'output_dim': 3, 'activation': 'sigmoid'},
-    {'input_dim': 3, 'output_dim': 9, 'activation': 'sigmoid'}
+    {'input_dim': 9, 'output_dim': 36, 'activation': 'relu'},
+    {'input_dim': 36, 'output_dim': 9, 'activation': 'sigmoid'}
 ]
 
 
@@ -46,7 +46,7 @@ class NNAgent:
                 positions.append((r, c))
         return positions
 
-    def chooseAction(self, current_state, symbol):
+    def chooseAction(self, current_state, symbol, train=True):
         available_positions = self._available_positions(current_state)
         if symbol == 1:
             #logger.info(f'Symbol {symbol} -> {current_state}')
@@ -58,16 +58,16 @@ class NNAgent:
         
         # Filter valiad actions
         mask = list(range(9))
-        #logger.info(f'{actions} {mask}')
         positions = [(int(idx / self.cols), idx % self.cols) for idx in mask]
         positions = [p for p in positions if p in available_positions]
         mask = [(row * self.cols) + col for row, col in positions]
-        
         weights = actions[mask]
-
-        #logger.info(f'{actions} {positions} {mask} {weights}')
-
-        r,c = random.choices(positions, weights=weights, k=1)[0]
+        
+        if train:
+            r,c = random.choices(positions, weights=weights, k=1)[0]
+        else:
+            idx = np.argmax(weights)
+            r, c = positions[idx]
         
         nn = {'activations': activations, 'networkLayer': self.model.layers()}
         
@@ -136,7 +136,7 @@ def callback(epoch:int, obj:list, population:list) -> None:
 
 def main(args: argparse.Namespace) -> None:
     # Define the bounds for the optimization
-    bounds = np.asarray([[-5.0, 5.0]]*nn.network_size(NN_ARCHITECTURE))
+    bounds = np.asarray([[-1.0, 1.0]]*nn.network_size(NN_ARCHITECTURE))
 
     # Generate the initial population
     population = [nn.NN(NN_ARCHITECTURE, seed=args.s).ravel() for _ in range(args.n)]
