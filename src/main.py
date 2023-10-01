@@ -49,6 +49,7 @@ def play():
     #row = int(request.args.get('row'))
     #column = int(request.args.get('col'))
     board = request.args.getlist('board')
+    logger.info(f'board = {board}')
     board = [float(x) for x in board]
     board = np.array(board)
     #board = board.reshape(3, 3)
@@ -58,7 +59,7 @@ def play():
     logger.info(f'Player Symbol = {ps}')
     #r, c = st.play_it(row, column)
 
-    r, c, nn = player.chooseAction(board, ps)
+    r, c, nn = player.chooseAction(board, ps, train=False)
 
     logger.info(f'Play {r} {c}')
     return jsonify({'row':int(r), 'col':int(c), 'neural_network':nn})
