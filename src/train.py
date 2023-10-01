@@ -82,7 +82,7 @@ class NNAgent:
 
         nn = {'activations': activations, 'networkLayer': self.model.layers()}
         
-        return r, c, nn
+        return r, c, len(mask), nn
 
 
 def objective(p: np.ndarray) -> float:
@@ -107,14 +107,15 @@ def objective(p: np.ndarray) -> float:
         adversary_agent = NNAgent(adversary_model)
         
         game = tictactoe.TicTacToe(current_agent, adversary_agent)
-        win_p1, draws, win_p2 = game.play(10)
+        win_p1, draws, win_p2, _, _ = game.play(10)
         
-        reward += (1.0 * win_p1 + 0.5 * draws + -1.0 * win_p2)
+        reward += (1.0 * win_p1 - 0.5 * draws + -1.0 * win_p2)
         #logger.info(f'Agent 1 {win_p1}, {draws}, {win_p2} -> {reward}')
 
         game = tictactoe.TicTacToe(adversary_agent, current_agent)
-        win_p1, draws, win_p2 = game.play(10)
-        reward += (-1.0 * win_p1 + 0.5 * draws + 1.0 * win_p2)
+        win_p1, draws, win_p2, _, _ = game.play(10)
+        
+        reward += (-1.0 * win_p1 - 0.5 * draws + 1.0 * win_p2)
         #logger.info(f'Agent 2 {win_p1}, {draws}, {win_p2} -> {reward}')
     
     return -reward
@@ -176,8 +177,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train the agents', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-s', type=int, help='Random generator seed', default=42)
-    parser.add_argument('-e', type=int, help='optimization epochs', default=5000)
-    parser.add_argument('-n', type=int, help='population size', default=20)
+    parser.add_argument('-e', type=int, help='optimization epochs', default=1000)
+    parser.add_argument('-n', type=int, help='population size', default=30)
     parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp_5000.json')
     args = parser.parse_args()
     main(args)
