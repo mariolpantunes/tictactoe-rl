@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 NN_ARCHITECTURE = [
-    {'input_dim': 9, 'output_dim': 6, 'activation': 'relu'},
-    {'input_dim': 6, 'output_dim': 6, 'activation': 'relu'},
-    {'input_dim': 6, 'output_dim': 9, 'activation': 'relu'}
+    {'input_dim': 9, 'output_dim': 9, 'activation': 'relu'},
+    {'input_dim': 9, 'output_dim': 9, 'activation': 'relu'},
+    {'input_dim': 9, 'output_dim': 9, 'activation': 'relu'}
 ]
 
 
