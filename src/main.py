@@ -59,9 +59,9 @@ def play():
     logger.info(f'Player Symbol = {ps}')
     #r, c = st.play_it(row, column)
 
-    r, c, nn = player.chooseAction(board, ps, train=False)
+    r, c, moves, nn = player.chooseAction(board, ps, train=False)
 
-    logger.info(f'Play {r} {c}')
+    logger.info(f'Play {r} {c} ({moves})')
     return jsonify({'row':int(r), 'col':int(c), 'neural_network':nn})
 
 

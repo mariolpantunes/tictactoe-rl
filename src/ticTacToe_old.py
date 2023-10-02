@@ -314,7 +314,7 @@ if __name__ == "__main__":
     import argparse
     from tqdm import tqdm
     parser = argparse.ArgumentParser(description='Tic Tac Toe')
-    parser.add_argument('-o', type=str, help='output file with policy')
-    parser.add_argument('-n', type=int, help='number of games to train')
+    parser.add_argument('-o', type=str, help='output file with policy',default='policies/1000000.pickle')
+    parser.add_argument('-n', type=int, help='number of games to train', default=1000000)
     args = parser.parse_args()
     training(args)

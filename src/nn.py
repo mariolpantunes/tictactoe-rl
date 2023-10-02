@@ -14,12 +14,17 @@ __status__ = 'Development'
 
 import math
 import typing
+import logging
 import warnings
 import numpy as np
 
 
 # suppress warnings
 warnings.filterwarnings('ignore')
+
+
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+logger = logging.getLogger(__name__)
 
 
 class NN:
@@ -76,10 +81,17 @@ class NN:
         '''
         A_curr, memory = full_forward_propagation(X, self.params_values, self.nn_architecture)
         activations = []
+
+        #logger.info(f'Memory: {memory}')
         
-        for i in range(len(self.nn_architecture)):
+        activations.append(memory[f'A{0}'].tolist())
+        for i in range(1, len(self.nn_architecture)):
             activations.append(compute_activations(memory[f'A{i}'], self.nn_architecture[i]['activation']))
+        #activations.append(A_curr.tolist())
         activations.append(compute_activations(A_curr, self.nn_architecture[-1]['activation']))
+
+        #logger.info(f'Activations: {A_curr}')
+        #logger.info(f'Activations: {activations}')
 
         return A_curr, activations
         
@@ -308,8 +320,7 @@ b_curr:np.ndarray, activation:str='relu') -> np.ndarray:
         Exception: on non-supported activation function
     '''
     # calculation of the input value for the activation function
-    Z_curr = np.dot(W_curr, A_prev) 
-    Z_curr += b_curr
+    Z_curr = np.dot(W_curr, A_prev) + b_curr
     
     # selection of activation function
     if activation == 'relu':

@@ -8,7 +8,7 @@ from src.ticTacToe_old import Player
 APP = Flask(__name__)
 
 player = Player('computer', exp_rate=0)
-player.loadPolicy('policies/10000.pickle')
+player.loadPolicy('policies/1000000.pickle')
 
 
 @APP.route('/')
