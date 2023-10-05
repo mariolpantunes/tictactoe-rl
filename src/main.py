@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import src.nn as nn
 from src.train import NNAgent
+from src.minMaxAgent import MinMaxAgent
 from flask import Flask, request, jsonify, render_template
 #from ticTacToe import Player
 
@@ -32,10 +33,11 @@ def load_data(path:str) -> tuple:
 APP = Flask(__name__)
 #APP.logger.setLevel(logging.ERROR)
 
-model_description, parameters = load_data('policies/model_mlp_5000.json')
-model = nn.NN(model_description)
-model.update(parameters)
-player = NNAgent(model)
+#model_description, parameters = load_data('policies/model_mlp_100.json')
+#model = nn.NN(model_description)
+#model.update(parameters)
+#player = NNAgent(model, train=False)
+player = MinMaxAgent() 
 #player.loadPolicy('policies/100000.pickle')
 
 
@@ -59,10 +61,12 @@ def play():
     logger.info(f'Player Symbol = {ps}')
     #r, c = st.play_it(row, column)
 
-    r, c, moves, nn = player.chooseAction(board, ps, train=False)
-
-    logger.info(f'Play {r} {c} ({moves})')
-    return jsonify({'row':int(r), 'col':int(c), 'neural_network':nn})
+    r, c, nn = player.chooseAction(board, ps)
+    logger.info(f'Play {r} {c}')
+    if nn is None:
+        return jsonify({'row':int(r), 'col':int(c)})
+    else:
+        return jsonify({'row':int(r), 'col':int(c), 'neural_network':nn})
 
 
 if __name__ == '__main__':

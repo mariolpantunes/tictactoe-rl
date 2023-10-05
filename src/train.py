@@ -14,9 +14,10 @@ import logging
 import argparse
 import numpy as np
 import src.nn as nn
-import src.tictactoe as tictactoe
 import pyBlindOpt.pso as pso
 import pyBlindOpt.init as init
+import src.tictactoe as tictactoe
+import src.minMaxAgent as minMaxAgent
 
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -24,18 +25,15 @@ logger = logging.getLogger(__name__)
 
 
 NN_ARCHITECTURE = [
-    {'input_dim': 9, 'output_dim': 9, 'activation': 'relu'},
-    {'input_dim': 9, 'output_dim': 9, 'activation': 'relu'},
-    {'input_dim': 9, 'output_dim': 9, 'activation': 'relu'}
+    {'input_dim': 9, 'output_dim': 6, 'activation': 'relu'},
+    {'input_dim': 6, 'output_dim': 9, 'activation': 'sigmoid'}
 ]
 
 
-POPULATION = None
-
-
 class NNAgent:
-    def __init__(self, model):
+    def __init__(self, model, train=True):
         self.model = model
+        self.train = train
         self.cols = 3
     
     def _available_positions(self, current_state):
@@ -47,7 +45,7 @@ class NNAgent:
                 positions.append((r, c))
         return positions
 
-    def chooseAction(self, current_state, symbol, train=True):
+    def chooseAction(self, current_state, symbol):
         available_positions = self._available_positions(current_state)
         if symbol == 1:
             #logger.info(f'Symbol {symbol} -> {current_state}')
@@ -70,19 +68,21 @@ class NNAgent:
         weights = actions[mask]
         
         if len(mask) > 0:
-            if train:
+            if self.train:
                 r,c = random.choices(positions, weights=weights, k=1)[0]
             else:
                 idx = np.argmax(weights)
                 r, c = positions[idx]
         else:
             # select random action
-            #r,c = random.choice(available_positions)
-            r,c = available_positions[0]
+            if self.train:
+                r,c = random.choice(available_positions)
+            else:
+                r,c = available_positions[0]
 
         nn = {'activations': activations, 'networkLayer': self.model.layers()}
         
-        return r, c, len(mask), nn
+        return r, c, nn
 
 
 def objective(p: np.ndarray) -> float:
@@ -101,22 +101,19 @@ def objective(p: np.ndarray) -> float:
     
     reward = 0.0
 
-    for p in POPULATION:
-        adversary_model = nn.NN(NN_ARCHITECTURE)
-        adversary_model.update(p) 
-        adversary_agent = NNAgent(adversary_model)
-        
-        game = tictactoe.TicTacToe(current_agent, adversary_agent)
-        win_p1, draws, win_p2, _, _ = game.play(10)
-        
-        reward += (1.0 * win_p1 - 0.5 * draws + -1.0 * win_p2)
-        #logger.info(f'Agent 1 {win_p1}, {draws}, {win_p2} -> {reward}')
+    adversary_agent = minMaxAgent.MinMaxAgent()
+    
+    game = tictactoe.TicTacToe(current_agent, adversary_agent)
+    win_p1, draws, win_p2 = game.play(3)
+    
+    reward += (1.0 * win_p1 + 0.25 * draws + -1.0 * win_p2)
+    #logger.info(f'Agent 1 {win_p1}, {draws}, {win_p2} -> {reward}')
 
-        game = tictactoe.TicTacToe(adversary_agent, current_agent)
-        win_p1, draws, win_p2, _, _ = game.play(10)
-        
-        reward += (-1.0 * win_p1 - 0.5 * draws + 1.0 * win_p2)
-        #logger.info(f'Agent 2 {win_p1}, {draws}, {win_p2} -> {reward}')
+    game = tictactoe.TicTacToe(adversary_agent, current_agent)
+    win_p1, draws, win_p2 = game.play(3)
+    
+    reward += (-1.0 * win_p1 + 0.5 * draws + 1.0 * win_p2)
+    #logger.info(f'Agent 2 {win_p1}, {draws}, {win_p2} -> {reward}')
     
     return -reward
 
@@ -177,8 +174,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train the agents', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-s', type=int, help='Random generator seed', default=42)
-    parser.add_argument('-e', type=int, help='optimization epochs', default=1000)
+    parser.add_argument('-e', type=int, help='optimization epochs', default=300)
     parser.add_argument('-n', type=int, help='population size', default=30)
-    parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp_5000.json')
+    parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp_300.json')
     args = parser.parse_args()
     main(args)
