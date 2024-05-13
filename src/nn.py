@@ -14,17 +14,12 @@ __status__ = 'Development'
 
 import math
 import typing
-import logging
 import warnings
 import numpy as np
 
 
 # suppress warnings
 warnings.filterwarnings('ignore')
-
-
-logging.basicConfig(level=logging.INFO, format='%(message)s')
-logger = logging.getLogger(__name__)
 
 
 class NN:
@@ -37,7 +32,7 @@ class NN:
     Ravel reduces the NN to a 1D  vector.
     The update method receives a 1D vector and loads the values into a network.
     '''
-    def __init__(self, nn_architecture:dict, seed:int=42) -> None:
+    def __init__(self, nn_architecture:dict) -> None:
         '''
         Constructor for a NN object.
 
@@ -50,10 +45,9 @@ class NN:
         
         Args:
             nn_architecture (dict): neural network definition
-            seed (int): seed for the random generator used in the network initialization
         '''
         self.nn_architecture = nn_architecture
-        self.params_values = init_layers(self.nn_architecture, seed)
+        self.params_values = init_layers(self.nn_architecture)
 
     def predict(self, X:np.ndarray) -> np.ndarray:
         '''
@@ -81,17 +75,10 @@ class NN:
         '''
         A_curr, memory = full_forward_propagation(X, self.params_values, self.nn_architecture)
         activations = []
-
-        #logger.info(f'Memory: {memory}')
         
-        activations.append(memory[f'A{0}'].tolist())
-        for i in range(1, len(self.nn_architecture)):
+        for i in range(len(self.nn_architecture)):
             activations.append(compute_activations(memory[f'A{i}'], self.nn_architecture[i]['activation']))
-        #activations.append(A_curr.tolist())
         activations.append(compute_activations(A_curr, self.nn_architecture[-1]['activation']))
-
-        #logger.info(f'Activations: {A_curr}')
-        #logger.info(f'Activations: {activations}')
 
         return A_curr, activations
         
@@ -169,7 +156,7 @@ class NN:
         return str({'ARCHITECTURE':self.nn_architecture,'PARAMETERS':self.params_values})
 
 
-def init_layers(nn_architecture:dict, seed:int = 42) -> dict:
+def init_layers(nn_architecture:dict) -> dict:
     '''
     Given a network definition it creates and initializes a new network.
 
@@ -180,8 +167,6 @@ def init_layers(nn_architecture:dict, seed:int = 42) -> dict:
     Returns:
         dict: with the network parameters
     '''
-    # random seed initiation
-    np.random.seed(seed)
     # number of layers in our neural network
     number_of_layers = len(nn_architecture)
     # parameters storage initiation
@@ -320,7 +305,8 @@ b_curr:np.ndarray, activation:str='relu') -> np.ndarray:
         Exception: on non-supported activation function
     '''
     # calculation of the input value for the activation function
-    Z_curr = np.dot(W_curr, A_prev) + b_curr
+    Z_curr = np.dot(W_curr, A_prev) 
+    Z_curr += b_curr
     
     # selection of activation function
     if activation == 'relu':

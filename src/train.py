@@ -16,6 +16,7 @@ import numpy as np
 import src.nn as nn
 import pyBlindOpt.pso as pso
 import pyBlindOpt.init as init
+import pyBlindOpt.egwo as egwo
 import src.tictactoe as tictactoe
 import src.minMaxAgent as minMaxAgent
 
@@ -144,11 +145,14 @@ def callback(epoch:int, obj:list, population:list) -> None:
     #logging.info(f'Pop {POPULATION}')
 
 def main(args: argparse.Namespace) -> None:
+    # Define the random seed
+    np.random.seed(args.s)
+
     # Define the bounds for the optimization
     bounds = np.asarray([[-1.0, 1.0]]*nn.network_size(NN_ARCHITECTURE))
 
     # Generate the initial population
-    population = [nn.NN(NN_ARCHITECTURE, seed=args.s).ravel() for _ in range(args.n)]
+    population = [nn.NN(NN_ARCHITECTURE).ravel() for _ in range(args.n)]
 
     # Store population in the global variable
     global POPULATION
@@ -161,7 +165,7 @@ def main(args: argparse.Namespace) -> None:
     population = init.opposition_based(objective, bounds, population=population, n_jobs=args.n)
 
     # Run the optimization algorithm
-    best, obj = pso.particle_swarm_optimization(objective, bounds, n_iter=args.e, callback = callback,
+    best, obj = egwo.grey_wolf_optimization(objective, bounds, n_iter=args.e, callback = callback,
     population=population, n_jobs=args.n, cached=False, verbose=True, seed=args.s)
 
     logger.info(f'OBJ {obj}')
