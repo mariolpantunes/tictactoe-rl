@@ -10,6 +10,7 @@ __status__ = 'Development'
 import json
 import math
 import random
+import joblib
 import logging
 import argparse
 import numpy as np
@@ -25,9 +26,12 @@ logger = logging.getLogger(__name__)
 
 
 NN_ARCHITECTURE = [
-    {'input_dim': 9, 'output_dim': 6, 'activation': 'relu'},
-    {'input_dim': 6, 'output_dim': 9, 'activation': 'sigmoid'}
+    {'input_dim': 9, 'output_dim': 16, 'activation': 'relu'},
+    {'input_dim': 16, 'output_dim': 9, 'activation': 'sigmoid'}
 ]
+
+
+memory = joblib.Memory('/dev/shm/joblib', verbose=0)
 
 
 class NNAgent:
@@ -101,16 +105,16 @@ def objective(p: np.ndarray) -> float:
     
     reward = 0.0
 
-    adversary_agent = minMaxAgent.MinMaxAgent()
+    adversary_agent = minMaxAgent.MinMaxAgent(memory)
     
     game = tictactoe.TicTacToe(current_agent, adversary_agent)
-    win_p1, draws, win_p2 = game.play(3)
+    win_p1, draws, win_p2 = game.play(10)
     
     reward += (1.0 * win_p1 + 0.25 * draws + -1.0 * win_p2)
     #logger.info(f'Agent 1 {win_p1}, {draws}, {win_p2} -> {reward}')
 
     game = tictactoe.TicTacToe(adversary_agent, current_agent)
-    win_p1, draws, win_p2 = game.play(3)
+    win_p1, draws, win_p2 = game.play(10)
     
     reward += (-1.0 * win_p1 + 0.5 * draws + 1.0 * win_p2)
     #logger.info(f'Agent 2 {win_p1}, {draws}, {win_p2} -> {reward}')
@@ -131,28 +135,12 @@ def store_data(model:dict, parameters:np.ndarray, path:str) -> None:
         json.dump({'model':model, 'parameters':parameters.tolist()}, f)
 
 
-def callback(epoch:int, obj:list, population:list) -> None:
-    '''
-    TODO
-    '''
-    # Store the new population in the global variable
-
-    #logging.info(f'{epoch}: {obj}')
-    global POPULATION
-    #logging.info(f'Pop {POPULATION}')
-    POPULATION = population
-    #logging.info(f'Pop {POPULATION}')
-
 def main(args: argparse.Namespace) -> None:
     # Define the bounds for the optimization
     bounds = np.asarray([[-1.0, 1.0]]*nn.network_size(NN_ARCHITECTURE))
 
     # Generate the initial population
     population = [nn.NN(NN_ARCHITECTURE, seed=args.s).ravel() for _ in range(args.n)]
-
-    # Store population in the global variable
-    global POPULATION
-    POPULATION = population
 
     #reward = objective(population[0])
     #logger.info(f'{reward}')
@@ -161,7 +149,7 @@ def main(args: argparse.Namespace) -> None:
     population = init.opposition_based(objective, bounds, population=population, n_jobs=args.n)
 
     # Run the optimization algorithm
-    best, obj = pso.particle_swarm_optimization(objective, bounds, n_iter=args.e, callback = callback,
+    best, obj = pso.particle_swarm_optimization(objective, bounds, n_iter=args.e,
     population=population, n_jobs=args.n, cached=False, verbose=True, seed=args.s)
 
     logger.info(f'OBJ {obj}')
@@ -174,8 +162,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train the agents', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-s', type=int, help='Random generator seed', default=42)
-    parser.add_argument('-e', type=int, help='optimization epochs', default=300)
-    parser.add_argument('-n', type=int, help='population size', default=30)
-    parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp_300.json')
+    parser.add_argument('-e', type=int, help='optimization epochs', default=10000)
+    parser.add_argument('-n', type=int, help='population size', default=50)
+    parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp_50_10000.json')
     args = parser.parse_args()
     main(args)

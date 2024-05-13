@@ -33,11 +33,12 @@ def load_data(path:str) -> tuple:
 APP = Flask(__name__)
 #APP.logger.setLevel(logging.ERROR)
 
-#model_description, parameters = load_data('policies/model_mlp_100.json')
-#model = nn.NN(model_description)
-#model.update(parameters)
-#player = NNAgent(model, train=False)
-player = MinMaxAgent() 
+model_description, parameters = load_data('policies/model_mlp_50_10000.json')
+model = nn.NN(model_description)
+model.update(parameters)
+player = NNAgent(model, train=False)
+
+#player = MinMaxAgent() 
 #player.loadPolicy('policies/100000.pickle')
 
 
@@ -62,6 +63,7 @@ def play():
     #r, c = st.play_it(row, column)
 
     r, c, nn = player.chooseAction(board, ps)
+
     logger.info(f'Play {r} {c}')
     if nn is None:
         return jsonify({'row':int(r), 'col':int(c)})
