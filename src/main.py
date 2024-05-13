@@ -33,7 +33,7 @@ def load_data(path:str) -> tuple:
 APP = Flask(__name__)
 #APP.logger.setLevel(logging.ERROR)
 
-model_description, parameters = load_data('policies/model_mlp_50_10000.json')
+model_description, parameters = load_data('policies/model_mlp_30_3000.json')
 model = nn.NN(model_description)
 model.update(parameters)
 player = NNAgent(model, train=False)

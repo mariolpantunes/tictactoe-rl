@@ -152,7 +152,7 @@ class MinMaxAgent:
                     #    moveVal = self.table[key]
                     #else:
                     moveVal = MinMaxAgent._minimax(board, symbol, 0, False, -math.inf, math.inf)
-                    #self.table[key] = moveVal
+                        #self.table[key] = moveVal
 
                     # Undo the move  
                     board[i][j] = 0

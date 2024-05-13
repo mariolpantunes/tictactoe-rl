@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 NN_ARCHITECTURE = [
-    {'input_dim': 9, 'output_dim': 16, 'activation': 'relu'},
-    {'input_dim': 16, 'output_dim': 9, 'activation': 'sigmoid'}
+    {'input_dim': 9, 'output_dim': 9, 'activation': 'relu'},
+    {'input_dim': 9, 'output_dim': 9, 'activation': 'sigmoid'}
 ]
 
 
@@ -106,16 +106,19 @@ def objective(p: np.ndarray) -> float:
     
     reward = 0.0
 
-    adversary_agent = minMaxAgent.MinMaxAgent(memory)
+    #adversary_agent = minMaxAgent.MinMaxAgent(memory)
+    adversary_agent = NNAgent(model)
     
     game = tictactoe.TicTacToe(current_agent, adversary_agent)
-    win_p1, draws, win_p2 = game.play(10)
+    #win_p1, draws, win_p2 = game.play(10)
+    win_p1, draws, win_p2 = game.play(30)
     
     reward += (1.0 * win_p1 + 0.25 * draws + -1.0 * win_p2)
     #logger.info(f'Agent 1 {win_p1}, {draws}, {win_p2} -> {reward}')
 
     game = tictactoe.TicTacToe(adversary_agent, current_agent)
-    win_p1, draws, win_p2 = game.play(10)
+    #win_p1, draws, win_p2 = game.play(10)
+    win_p1, draws, win_p2 = game.play(30)
     
     reward += (-1.0 * win_p1 + 0.5 * draws + 1.0 * win_p2)
     #logger.info(f'Agent 2 {win_p1}, {draws}, {win_p2} -> {reward}')
@@ -146,10 +149,6 @@ def main(args: argparse.Namespace) -> None:
     # Generate the initial population
     population = [nn.NN(NN_ARCHITECTURE).ravel() for _ in range(args.n)]
 
-    # Store population in the global variable
-    global POPULATION
-    POPULATION = population
-
     #reward = objective(population[0])
     #logger.info(f'{reward}')
 
@@ -157,7 +156,7 @@ def main(args: argparse.Namespace) -> None:
     population = init.opposition_based(objective, bounds, population=population, n_jobs=args.n)
 
     # Run the optimization algorithm
-    best, obj = egwo.grey_wolf_optimization(objective, bounds, n_iter=args.e, callback = callback,
+    best, obj = egwo.grey_wolf_optimization(objective, bounds, n_iter=args.e,
     population=population, n_jobs=args.n, cached=False, verbose=True, seed=args.s)
 
     logger.info(f'OBJ {obj}')
@@ -170,8 +169,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train the agents', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-s', type=int, help='Random generator seed', default=42)
-    parser.add_argument('-e', type=int, help='optimization epochs', default=10000)
-    parser.add_argument('-n', type=int, help='population size', default=50)
-    parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp_50_10000.json')
+    parser.add_argument('-e', type=int, help='optimization epochs', default=3000)
+    parser.add_argument('-n', type=int, help='population size', default=30)
+    parser.add_argument('-o', type=str, help='store the best model', default='policies/model_mlp_30_3000.json')
     args = parser.parse_args()
     main(args)
